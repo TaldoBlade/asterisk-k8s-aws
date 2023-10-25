@@ -15,7 +15,7 @@ resource "aws_security_group" "asterisk" {
   description        = "Custom security group allowing specified traffic"
   vpc_id             = local.vpc_id
 
-  # Ingress rule for TCP/UDP traffic from port 5060 to 5065
+  # Ingress rule for TCP traffic from port 5060 to 5065
   ingress {
     from_port   = 5060
     to_port     = 5065
@@ -46,6 +46,14 @@ resource "aws_security_group" "asterisk" {
     protocol    = "icmp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  # Allow traffic to the internet
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
 
 # Launch an EC2 instance with the custom security group
@@ -68,7 +76,7 @@ resource "aws_instance" "asterisk" {
     }
   }
   provisioner "local-exec" {
-    command = "ansible-playbook  -i ${aws_instance.asterisk.public_ip}, --private-key ${local.private_key_path} asterisk.yml"
+    command = "ansible-playbook  -i ${aws_instance.asterisk.public_ip}, --private-key ${local.private_key_path} -u ubuntu asterisk.yml"
   }
 }
 
