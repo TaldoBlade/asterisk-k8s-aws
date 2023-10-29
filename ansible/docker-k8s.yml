@@ -55,3 +55,15 @@
           - kubeadm
           - kubectl
         state: present
+
+  - name: Copy the Python script to remote host
+    copy:
+      src: ./asterisk_docker.py
+      dest: ~/asterisk_docker.py
+    remote_src: yes
+  
+  - name: Run Python script if copy was successful
+      shell: "python ~/asterisk_docker.py"
+      args:
+        chdir: ~
+      when: copy_result|success

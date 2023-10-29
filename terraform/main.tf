@@ -1,4 +1,4 @@
-locals {
+locals { # Declare the variables to be used
   vpc_id           = "vpc-0bb7934f7c7b499cb"
   subnet_id        = "subnet-0a42df9cb59b1e21d"
   ssh_user         = "ubuntu"
@@ -6,11 +6,14 @@ locals {
   private_key_path = "/home/blade/asterisk-k8s-aws/devops.pem"
 }
 
-provider "aws" {
+provider "aws" { # Declare a provider, in this case AWS, so we can connect and send commands to
   region = "sa-east-1"
 }
 
-resource "aws_security_group" "asterisk" {
+# Resources are codes that we want to use in order to provision infraestructure
+# Creates a security group to be used by the EC2 instance
+# resource "type(which doesn't change)" "name of the resource(unique)"
+resource "aws_security_group" "asterisk_security_group" { 
   name_prefix        = "custom-security-group-"
   description        = "Custom security group allowing specified traffic"
   vpc_id             = local.vpc_id
@@ -76,7 +79,7 @@ resource "aws_instance" "asterisk" {
     }
   }
   provisioner "local-exec" {
-    command = "ansible-playbook  -i ${aws_instance.asterisk.public_ip}, --private-key ${local.private_key_path} -u ubuntu asterisk.yml"
+    command = "ansible-playbook  -i ${aws_instance.asterisk.public_ip}, --private-key ${local.private_key_path} -u ubuntu docker-k8s.yml"
   }
 }
 
