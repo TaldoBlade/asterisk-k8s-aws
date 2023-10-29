@@ -1,13 +1,49 @@
----
-
 - hosts: all
   become: true
   tasks:
+    - name: Update package cache
+      apt:
+        update_cache: yes
 
+    - name: Install Asterisk
+      apt:
+        name: 
+          - asterisk
+        state: present
 
-  - name: install asterisk
-    apt:
-      name:
-        - asterisk
-      state: latest
-      update_cache: yes
+    - name: Install Tools
+      apt:
+        name: 
+          - net-tools
+          - sngrep
+          - tcpdump
+          - htop
+          - neovim
+          - vim
+        state: present
+
+    - name: Create a backup of existing sip.conf file
+      command: cp /etc/asterisk/sip.conf /etc/asterisk/sip.conf.bkp
+      args:
+        creates: /etc/asterisk/sip.conf.bkp
+
+    - name: Create a backup of existing extensions.conf file
+      command: cp /etc/asterisk/extensions.conf /etc/asterisk/extensions.conf.bkp
+      args:
+        creates: /etc/asterisk/extensions.conf.bkp
+
+    - name: Copy sip.conf to remote host
+      copy:
+        src: ../asterisk/sip.conf
+        dest: /etc/asterisk/sip.conf
+
+    - name: Copy extensions.conf to remote host
+      copy:
+        src: ../asterisk/extensions.conf
+        dest: /etc/asterisk/extensions.conf
+
+    - name: Reload SIP configuration in Asterisk
+      command: sudo asterisk -rx "sip reload"
+
+    - name: Reload extensions configuration in Asterisk
+      command: sudo asterisk -rx "dialplan reload"

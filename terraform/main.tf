@@ -1,9 +1,10 @@
 locals { # Declare the variables to be used
-  vpc_id           = "vpc-0bb7934f7c7b499cb"
-  subnet_id        = "subnet-0a42df9cb59b1e21d"
-  ssh_user         = "ubuntu"
-  key_name         = "devops"
-  private_key_path = "/home/blade/asterisk-k8s-aws/devops.pem"
+  vpc_id            = "vpc-0bb7934f7c7b499cb"
+  subnet_id         = "subnet-0a42df9cb59b1e21d"
+  ssh_user          = "ubuntu"
+  key_name          = "devops"
+  private_key_path  = "/home/blade/asterisk-k8s-aws/devops.pem"
+  ansible_file_path = "/home/blade/asterisk-k8s-aws/ansible/asterisk.yml"
 }
 
 provider "aws" { # Declare a provider, in this case AWS, so we can connect and send commands to
@@ -18,11 +19,11 @@ resource "aws_security_group" "asterisk_security_group" {
   description        = "Custom security group allowing specified traffic"
   vpc_id             = local.vpc_id
 
-  # Ingress rule for TCP traffic from port 5060 to 5065
+  # Ingress rule for UDP traffic from port 5060 to 5065
   ingress {
     from_port   = 5060
     to_port     = 5065
-    protocol    = "tcp"
+    protocol    = "udp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
@@ -66,7 +67,7 @@ resource "aws_instance" "asterisk" {
   instance_type               = "t2.micro"
   associate_public_ip_address = true
   key_name                    = local.key_name
-  security_groups = [aws_security_group.asterisk.id]
+  security_groups = [aws_security_group.asterisk_security_group.id]
 
   provisioner "remote-exec" {
     inline = ["echo 'Wait until SSH is ready'"]
@@ -79,7 +80,7 @@ resource "aws_instance" "asterisk" {
     }
   }
   provisioner "local-exec" {
-    command = "ansible-playbook  -i ${aws_instance.asterisk.public_ip}, --private-key ${local.private_key_path} -u ubuntu docker-k8s.yml"
+    command = "ansible-playbook  -i ${aws_instance.asterisk.public_ip}, --private-key ${local.private_key_path} -u ubuntu ${local.ansible_file_path}"
   }
 }
 
